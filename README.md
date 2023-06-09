@@ -20,4 +20,4 @@ There could be several reasons why the quality of your fine-tuned model for the 
 
 5. Model architecture and capabilities: The GPT-3.5-turbo model used in the base API is already a powerful and versatile language model with a wide range of capabilities. It is designed to perform well across various tasks and domains. If the specific requirements of your insurance call center use case do not significantly benefit from fine-tuning or require domain-specific knowledge, using the base GPT-3.5-turbo API directly might indeed provide better results.
 
-To improve the quality of your fine-tuned model, consider carefully curating and expanding your training data, experimenting with different fine-tuning approaches, evaluating the model's performance effectively, and iterating on the training process based on feedback.
+To improve the quality of your fine-tuned model, consider carefully curating and expanding your training data, experimenting with different fine-tuning approaches, evaluating the model's performance effectively, and iterating on the training process based on feedback.# openai-chatbot-callcenter-without-deploy
