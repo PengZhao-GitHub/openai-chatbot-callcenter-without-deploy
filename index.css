@@ -1,7 +1,7 @@
 :root {
-    --border-rad-lg: 15px;
+    --border-rad-lg: 30px;
     --medium-light-text: #586e88;
-    --light-text: #fcfcfc;
+    --light-text: #232F3E;
 }
 
 *, *::before, *::after {
@@ -25,7 +25,7 @@ main {
 /* chatbot elements */
 
 .chatbot-container {
-    background-color: #16202C;
+    background-color:#131A22;
     width: 360px;
     min-height: 380px;
     border-radius: var(--border-rad-lg);
@@ -47,6 +47,7 @@ main {
 
 .chatbot-header > * {
     margin: .11em;
+    color: white; 
 }
 
 .logo {
@@ -77,10 +78,14 @@ main {
 }
 
 .chatbot-conversation-container {
-    max-height: 250px;
-    min-height: 250px;
+    background-color: white;
+    border-radius: .3em;
+    max-height: 500px;
+    min-height: 500px;
     overflow-y: scroll;
     margin: 1em 0;
+
+    font-size: small;
 }
 
 /* stop ugly scroll bar on some browsers */
@@ -106,17 +111,20 @@ main {
 }
 
 .speech-ai {
-	background: #253b4b;
+	background: hsl(200, 100%, 90%);
     border-top-left-radius: 0; 
 }
 
 .speech-human {
-	background: #24976f;
+	background: #F2F3F4;
     border-top-right-radius: 0; 
 }
 
 .chatbot-input-container {
     display: flex;
+    background-color:  #232F3E;;
+    border-radius: .3em;
+    
 }
 
 input[type="text"], button{
