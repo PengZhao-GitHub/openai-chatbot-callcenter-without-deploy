@@ -10,6 +10,7 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration)
 
 const chatbotConversation = document.getElementById('chatbot-conversation')
+const clearButton = document.getElementById('clear-btn')
 
 const conversationArr = [
     {
@@ -18,6 +19,13 @@ const conversationArr = [
         content: 'you are the call center staff member of the insurance company - AIG Sonpo. You are able to provide customers the information about their insurance policies, assist customers in navigating the claims process and provide guidance on how to file a claim, offer prompt and efficient insurance quotes to customers based on their specific needs, and connect customers with appropriate insurance agents for more personalized assistance, or direct them to the customer portal for self-service option. please give clear, short and concise responses. When customer asks for a quote, do not say no, but ask what insurance the cusotmer wants, and then ask for needed informaiton of the insurance, and then get the quote from PAS, and then provide the quote to customer. '
     }
 ]
+
+clearButton.addEventListener('click', e => {
+    e.preventDefault()
+    conversationArr.splice(1)
+    chatbotConversation.innerHTML = '<div class="speech speech-ai">How can I help you?</div>'
+
+})
 
 document.addEventListener('submit', async (e) => {
     e.preventDefault()
@@ -174,8 +182,8 @@ async function fetchReply(conversationArr) {
                 function_response = get_policy_information(parameters)
                 break
             case "file_FNOL":
-               function_response = file_FNOL(parameters)
-               break
+                function_response = file_FNOL(parameters)
+                break
 
         }
 
@@ -245,14 +253,19 @@ function file_FNOL(parameters) {
         }
     }
 
+    const policyholderFakeProperties = getFakeProperties(parameters.policyholder, conversationArr);
+    const lossFakeProperties = getFakeProperties(parameters.loss, conversationArr);
+    const fakeProperties = policyholderFakeProperties.concat(lossFakeProperties);
 
-    if (missingProperties.length === 0) {
+    console.log("fake properties:", fakeProperties)
+
+
+    if (missingProperties.length === 0 && fakeProperties.length === 0) {
         return "we have confirmed you policy information and filled your claims. And your claims number is #777888999 ";
     } else {
-        const errorMessage = `The following properties are required: ${missingProperties.join(", ")}.`;
+        const errorMessage = `The following properties are required: ${missingProperties.join(", ")}, ${fakeProperties.join(", ")}.`;
         return errorMessage;
     }
-
 
 }
 
@@ -295,13 +308,6 @@ async function getCutsomerInfo(conversation) {
     const parameters = JSON.parse(summary)
     console.log(parameters)
 
-    if (parameters.insuranceProduct !== "" && parameters.transactionType !== "" && parameters.customerInformation.age !== "") {
-        return true
-    }
-
-    return false
-
-
 }
 
 function renderTypewriterText(text) {
@@ -318,4 +324,32 @@ function renderTypewriterText(text) {
         i++
         chatbotConversation.scrollTop = chatbotConversation.scrollHeight
     }, 50)
+}
+
+
+// Helper function
+// ********************************************************************
+function getFakeProperties(jsonObj, conversationArr) {
+    const missingProperties = [];
+    const userMessages = conversationArr.filter((message) => message.role === 'user');
+
+    // Iterate over each property in the JSON object
+    for (const [key, value] of Object.entries(jsonObj)) {
+        console.log('Key:', key, 'Value:', value)
+        // Check if the value exists in the conversation array
+        const existsInConversation = userMessages.some((message) => {
+            console.log('---> content:', message.content, " value", value)
+            if (message.content && message.content.includes(value)) {
+                return true;
+            }
+            return false;
+        });
+
+        // If the value is not found, add the property name to the missingProperties array
+        if (!existsInConversation) {
+            missingProperties.push(key);
+        }
+    }
+
+    return missingProperties;
 }
