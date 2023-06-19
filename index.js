@@ -11,6 +11,7 @@ const openai = new OpenAIApi(configuration)
 
 const chatbotConversation = document.getElementById('chatbot-conversation')
 const clearButton = document.getElementById('clear-btn')
+const saveButton = document.getElementById('save-btn')
 
 const conversationArr = [
     {
@@ -20,12 +21,21 @@ const conversationArr = [
     }
 ]
 
+saveButton.addEventListener('click', e => {
+    e.preventDefault()
+
+    console.log("Save the conversation as: ", conversationArr.slice(1))
+
+})
+
 clearButton.addEventListener('click', e => {
     e.preventDefault()
     conversationArr.splice(1)
     chatbotConversation.innerHTML = '<div class="speech speech-ai">How can I help you?</div>'
 
 })
+
+
 
 document.addEventListener('submit', async (e) => {
     e.preventDefault()
@@ -64,6 +74,9 @@ document.addEventListener('submit', async (e) => {
 
 
 async function fetchReply(conversationArr) {
+
+    // const summary = await sumarizeConversation(conversationArr)
+    // console.log("summary:", summary)
 
     // Invoke the OpenAI API for generating AI responses
     const response = await openai.createChatCompletion({
@@ -156,6 +169,79 @@ async function fetchReply(conversationArr) {
                     },
                     required: ["policyholder", "loss"]
                 }
+            },
+            {
+                name: "get_auto_quote",
+                description: "get a quote of the auto insurance",
+                parameters: {
+                    type: "object",
+                    properties: {
+                        vehicle: {
+                            type: "object",
+                            properties: {
+                                make: {
+                                    type: "string",
+                                    description: "vehicle make"
+                                },
+                                model: {
+                                    type: "string",
+                                    description: "vehicle model"
+                                },
+                                year: {
+                                    type: "string",
+                                    description: "vehicle mode year"
+                                }
+                            },
+                            required: ["name", "model", "year"]
+                        },
+                        driver: {
+                            type: "object",
+                            properties: {
+                                name: {
+                                    type: "string",
+                                    description: "Driver's name"
+                                },
+                                age: {
+                                    type: "string",
+                                    description: "Driver's age"
+                                },
+                                gender: {
+                                    type: "string",
+                                    description: "Driver's gender"
+                                },
+                                driving_experience: {
+                                    type: "string",
+                                    description: "The number of years of the driving experinece"
+                                },
+                            },
+                            required: ["name", "age", "gender", "driving_experience"]
+                        },
+                        coverage: {
+                            type: "object",
+                            properties: {
+                                bodily_injury_liability: {
+                                    type: "string",
+                                    //enum: ["no limit", "JPY200m", "JPY100m", "JPY50m", "JPY30m"],
+                                    description: "The desired amout of the bodily injury"
+                                },
+                                property_damage_liability: {
+                                    type: "string",
+                                    description: "The desired amout of the property damage"
+                                },
+                                vehicle_insurance: {
+                                    type: "string",
+                                    description: " It is an insurance that compensates for repair costs or the cash value of the vehicle if it incurs total loss (unrepairable) or partial damage due to accidents or natural disasters."
+                                },
+                                driver_passenger_injury: {
+                                    type: "string",
+                                    description: "It is an insurance that provides compensation for accidents or injuries to the driver of the vehicle and the occupants (passengers) inside the vehicle."
+                                },
+                            },
+                            required: ["bodily_injury_liability"]
+                        },
+                    },
+                    required: ["vehicle", "driver", "coverage"]
+                }
             }
         ],
         function_call: "auto",
@@ -184,6 +270,8 @@ async function fetchReply(conversationArr) {
             case "file_FNOL":
                 function_response = file_FNOL(parameters)
                 break
+            case "get_auto_quote":
+                function_response = get_auto_quote(parameters)
 
         }
 
@@ -213,6 +301,10 @@ async function fetchReply(conversationArr) {
 
 
 }
+
+
+// APIs
+// ********************************************************************
 
 function get_policy_information(parameters) {
     console.log("Inside of the get_policy_information API", parameters)
@@ -263,33 +355,92 @@ function file_FNOL(parameters) {
     if (missingProperties.length === 0 && fakeProperties.length === 0) {
         return "we have confirmed you policy information and filled your claims. And your claims number is #777888999 ";
     } else {
-        const errorMessage = `The following properties are required: ${missingProperties.join(", ")}, ${fakeProperties.join(", ")}.`;
+        const errorMessage = `Ask user to provide the required information :: ${missingProperties.join(", ")}, ${fakeProperties.join(", ")}.`;
         return errorMessage;
     }
 
 }
 
-async function get_quote() {
-    const quote = "JPY 123456"
-    return quote;
+function get_auto_quote(parameters) {
+    console.log("Inside of the get_auto_quote API", parameters)
+
+    const requiredVehicleProperties = ['make', 'model', 'year'];
+    const requiredDriverProperties = ['name', 'age', 'gender', 'driving_experience'];
+    const requiredCoverageProperties = ['bodily_injury_liability']
+    const missingProperties = [];
+
+    for (const property of requiredVehicleProperties) {
+        if (!parameters.vehicle[property] || parameters.vehicle[property] === "") {
+            missingProperties.push(property);
+        }
+    }
+
+    for (const property of requiredDriverProperties) {
+        if (!parameters.driver[property] || parameters.driver[property] === "") {
+            missingProperties.push(property);
+        }
+    }
+
+    for (const property of requiredCoverageProperties) {
+        if (!parameters.coverage[property] || parameters.coverage[property] === "") {
+            missingProperties.push(property);
+        }
+    }
+
+    const vehicleFakeProperties = getFakeProperties(parameters.vehicle, conversationArr);
+    const driverFakeProperties = getFakeProperties(parameters.driver, conversationArr);
+    const coverageFakeProperties = getFakeProperties(parameters.coverage, conversationArr);
+    const fakeProperties = vehicleFakeProperties.concat(driverFakeProperties).concat(coverageFakeProperties);
+
+    console.log("fake properties:", fakeProperties)
+
+    if (missingProperties.length === 0 && fakeProperties.length === 0) {
+        return `The quote is JPY12,345. Please give the quote with the coverage information provided by the user`;
+    } else {
+        const errorMessage = `Ask user to provide the required information : ${missingProperties.join(", ")} , ${fakeProperties.join(", ")}.`;
+        return errorMessage;
+    }
 
 }
 
 
-async function getCutsomerInfo(conversation) {
+
+// Helper function
+// ********************************************************************
+function getFakeProperties(jsonObj, conversationArr) {
+    const missingProperties = [];
+    const userMessages = conversationArr.filter((message) => message.role === 'user');
+
+    // Iterate over each property in the JSON object
+    for (const [key, value] of Object.entries(jsonObj)) {
+        console.log('Key:', key, 'Value:', value)
+        // Check if the value exists in the conversation array
+        const existsInConversation = userMessages.some((message) => {
+            console.log('---> content:', message.content.toLowerCase(), " value", value.toLowerCase())
+            if (message.content && message.content.toLowerCase().includes(value.toLowerCase())) {
+                return true;
+            }
+            return false;
+        });
+
+        // If the value is not found, add the property name to the missingProperties array
+        if (!existsInConversation) {
+            missingProperties.push(key);
+        }
+    }
+
+    return missingProperties;
+}
+
+
+
+async function sumarizeConversation(conversation) {
+    const conversationStr = JSON.stringify(conversation.slice(1))
+    console.log(conversationStr)
     // Call the OpenAI API to generate the summary
     const response = await openai.createCompletion({
         model: 'text-davinci-003',
-        prompt: `Extract insurance product, trasacton type and cusotmer information from the ${conversation}. And then create a JSON object to show the information capatured. The format of the JSON object likes 
-        {
-            "insuranceProduct": "auto", 
-            "transactionType": "quote",
-            "customerInformation": {
-                "name": "", 
-                "age" : "" 
-            }
-
-        },`,
+        prompt: `Find what the user wants based on the converstation as ${conversationStr}.`,
         max_tokens: 100,
         temperature: 0.5,
         n: 1,
@@ -305,8 +456,7 @@ async function getCutsomerInfo(conversation) {
     // Extract the summary from the API response
     const summary = response.data.choices[0].text.trim();
 
-    const parameters = JSON.parse(summary)
-    console.log(parameters)
+    return summary
 
 }
 
@@ -324,32 +474,4 @@ function renderTypewriterText(text) {
         i++
         chatbotConversation.scrollTop = chatbotConversation.scrollHeight
     }, 50)
-}
-
-
-// Helper function
-// ********************************************************************
-function getFakeProperties(jsonObj, conversationArr) {
-    const missingProperties = [];
-    const userMessages = conversationArr.filter((message) => message.role === 'user');
-
-    // Iterate over each property in the JSON object
-    for (const [key, value] of Object.entries(jsonObj)) {
-        console.log('Key:', key, 'Value:', value)
-        // Check if the value exists in the conversation array
-        const existsInConversation = userMessages.some((message) => {
-            console.log('---> content:', message.content, " value", value)
-            if (message.content && message.content.includes(value)) {
-                return true;
-            }
-            return false;
-        });
-
-        // If the value is not found, add the property name to the missingProperties array
-        if (!existsInConversation) {
-            missingProperties.push(key);
-        }
-    }
-
-    return missingProperties;
 }

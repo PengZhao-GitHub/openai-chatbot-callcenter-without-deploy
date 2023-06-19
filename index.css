@@ -53,12 +53,21 @@ main {
 .logo {
     grid-area: logo;
     width: 45px;
+    border-radius: 1.5rem;
 }
 
 .supportId {
-    font-size: 10px;
+
     grid-area: supportId;
     text-align: center;
+
+    height: 20px;
+    padding: 0;
+    width: 80%;
+    color: var(--medium-light-text);
+    font-size: 12px;
+    margin: 0 auto; 
+
 }
 
 .clear-btn {
@@ -71,9 +80,10 @@ main {
     margin: 0 auto; 
 }
 
-.clear-btn:hover {
-    border: 1px solid #24976f;
-    color: #24976f;
+.supportId:hover, .clear-btn:hover {
+    border: 0.5px solid hsl(207, 92%, 36%);
+    color: white;
+    background-color: hsl(207, 92%, 36%);
     cursor: pointer;
 }
 
@@ -187,5 +197,5 @@ h2 {
     content: "|";
     font-weight: 700;
     display: inline-block;
-    animation: cursor-blink .5s steps(2) infinite;
+    animation: cursor-blink .1s steps(2) infinite;
 }
